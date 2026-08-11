@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#101315">
+<link rel="manifest" href="manifest.webmanifest">
+<title>ISLAND ESCAPE</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101315;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",sans-serif;touch-action:none}
+canvas{position:fixed;inset:0;width:100%;height:100%}.hide{display:none!important}
+#title,#modal{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:#000b;text-align:center}
+#title{background:radial-gradient(circle at 50% 25%,#58462f,#080909 70%)}
+.box,.card{width:min(92%,560px);padding:24px;border-radius:20px}.box{background:#0005}.card{background:#171717;border:1px solid #806344;max-height:88vh;overflow:auto}
+h1{font-size:clamp(40px,11vw,70px);margin:0 0 8px}h1 span{color:#c73532}.sub{opacity:.65}
+button{font:inherit;color:#fff;background:#292017;border:1px solid #806344;border-radius:12px;padding:12px 16px;margin:5px}.main{display:block;width:100%;margin:10px 0;padding:15px}
+#hud{position:fixed;inset:0;z-index:5;pointer-events:none}.badge{position:absolute;top:12px;left:12px;background:#000b;border:1px solid #fff3;border-radius:12px;padding:8px 11px}.menu{position:absolute;top:12px;right:12px;pointer-events:auto}
+#hint{position:absolute;bottom:13px;left:4%;right:4%;background:#000c;border-radius:13px;padding:10px;text-align:center;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid button{min-height:52px}.code{font-size:26px;width:140px;padding:8px;text-align:center;background:#222;color:white;border:1px solid #777;border-radius:9px}
+#cross{position:fixed;z-index:4;left:50%;top:50%;width:15px;height:15px;transform:translate(-50%,-50%);opacity:.5;pointer-events:none}.c1,.c2{position:absolute;background:white}.c1{width:15px;height:1px;top:7px}.c2{height:15px;width:1px;left:7px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="title">
+ <div class="box">
+  <h1>ISLAND <span>ESCAPE</span></h1>
+  <div class="sub">DRUM BARREL INCIDENT</div>
+  <button class="main" onclick="newGame()">ゲーム開始</button>
+  <button class="main hide" id="resume" onclick="resumeGame()">つづきから</button>
+  <button class="main" onclick="showHelp()">遊び方</button>
+ </div>
+</div>
+
+<div id="hud">
+ <div class="badge" id="stage"></div>
+ <button class="menu" onclick="showMenu()">☰</button>
+ <div id="hint"></div>
+</div>
+<div id="cross"><i class="c1"></i><i class="c2"></i></div>
+
+<div id="modal"><div class="card" id="card"></div></div>
+
+<script>
+"use strict";
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+let W=0,H=0,dpr=1,drag=false,lastX=0,view=0;
+const KEY="islandEscapeV1";
+let S={stage:1,rope:0,lever:0,pin:0,key:0,tool:0,gear:0,panel:0};
+const $=id=>document.getElementById(id);
+
+function resize(){
+ W=innerWidth;H=innerHeight;dpr=Math.min(devicePixelRatio||1,2);
+ cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";
+ ctx.setTransform(dpr,0,0,dpr,0,0);draw();
+}
+addEventListener("resize",resize);
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function hasSave(){try{return !!localStorage.getItem(KEY)}catch(e){return false}}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x){S=x;return true}}catch(e){}return false}
+function newGame(){S={stage:1,rope:0,lever:0,pin:0,key:0,tool:0,gear:0,panel:0};save();$("title").classList.add("hide");update();draw()}
+function resumeGame(){if(!load())return newGame();$("title").classList.add("hide");update();draw()}
+function update(){
+ $("stage").textContent="STAGE "+S.stage;
+ $("hint").textContent=[
+  "ドラム缶の中。中央の結び目をタップしてロープを解く。",
+  "レバーと安全ピンを解除してドラム缶から脱出する。",
+  "倉庫の謎を順番に解いて大扉を開ける。",
+  "海岸のボートを調べて島から脱出する。"
+ ][S.stage-1];
+}
+function popup(html){$("card").innerHTML=html;$("modal").style.display="flex"}
+function close(){ $("modal").style.display="none" }
+function showHelp(){popup("<h2>遊び方</h2><p>画面を左右にスワイプすると視点が動きます。中央の照準が気になる場所に来たらタップ。</p><p>進行状況は自動保存されます。</p><button onclick='close()'>閉じる</button>")}
+function showMenu(){popup("<h2>メニュー</h2><p>セーブは自動です。</p><button onclick='close()'>戻る</button><button onclick='localStorage.removeItem(KEY);location.reload()'>セーブ削除</button>")}
+
+function bg(a,b){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,a);g.addColorStop(1,b);ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+function text(s,x,y,z=18){ctx.fillStyle="#fff";ctx.font=z+"px sans-serif";ctx.textAlign="center";ctx.fillText(s,x,y)}
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
+function circle(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+
+function draw(){
+ if(!W)return;
+ if(S.stage===1)drawBarrel();
+ else if(S.stage===2)drawDrum();
+ else if(S.stage===3)drawWarehouse();
+ else drawBeach();
+}
+function floor(c){rect(0,H*.69,W,H*.31,c);ctx.strokeStyle="#ffffff12";for(let i=0;i<11;i++){ctx.beginPath();ctx.moveTo(i*W/10,H*.69);ctx.lineTo(W/2+(i-5)*W*.32,H);ctx.stroke()}}
+function drawBarrel(){
+ bg("#070707","#2b2118");const x=W/2+Math.sin(view)*W*.08;
+ ctx.strokeStyle="#596058";ctx.lineWidth=7;
+ for(let i=0;i<8;i++){ctx.beginPath();ctx.ellipse(x,H*.52,Math.min(W*.46,310)+i*4,H*.60-i*7,0,0,Math.PI*2);ctx.stroke()}
+ ctx.fillStyle="#202420";ctx.beginPath();ctx.ellipse(x,H*.52,Math.min(W*.40,280),H*.50,0,0,Math.PI*2);ctx.fill();
+ circle(x-W*.12,H*.59,25,"#925f49");circle(x+W*.12,H*.59,25,"#925f49");
+ ctx.strokeStyle="#aa8962";ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(x-W*.14,H*.57);ctx.quadraticCurveTo(x,H*.43,x+W*.14,H*.57);ctx.stroke();
+ text("錆びたドラム缶の内部",x,H*.18,20);text("ロープの結び目をタップ",x,H*.23,14);
+}
+function drawDrum(){
+ bg("#101516","#40382e");floor("#463e34");const x=W/2;
+ rect(x-W*.36,H*.19,W*.72,H*.60,"#414a48");ctx.strokeStyle="#7a827d";ctx.lineWidth=5;ctx.strokeRect(x-W*.36,H*.19,W*.72,H*.60);
+ ctx.fillStyle="#202524";ctx.beginPath();ctx.ellipse(x,H*.19,W*.36,33,0,0,Math.PI*2);ctx.fill();
+ rect(x+W*.23,H*.40,15,130,"#98673d");rect(x-W*.23,H*.42,13,80,"#bcb9a7");
+ text("レバー　　　　安全ピン",x,H*.37,14);text("2つのロックを解除して蓋を開ける",x,H*.88,15);
+}
+function drawWarehouse(){
+ bg("#111a1d","#4b4339");floor("#4b4338");rect(W*.06,H*.14,W*.88,H*.56,"#303534");
+ for(let i=0;i<5;i++){rect(W*.10,H*(.19+i*.095),W*.30,9,"#654b32");rect(W*.15,H*(.15+i*.095),55,38,"#815b37")}
+ rect(W*.44,H*.52,120,62,"#963a2e");text("工具箱",W*.50,H*.59,14);
+ ["#2e607a","#a33d35","#aa903e","#2e607a"].forEach((c,i)=>circle(W*.70+i*38,H*.39,17,c));
+ rect(W*.78,H*.22,W*.14,H*.46,"#664a31");rect(W*.81,H*.27,W*.08,H*.33,"#111615");
+ text("制御盤",W*.70,H*.34,13);text("大扉",W*.86,H*.24,18);
+ text("棚 → 工具箱 → 青ドラム → 制御盤 → 大扉",W/2,H*.88,13);
+}
+function drawBeach(){
+ bg("#68bee0","#d8bf86");rect(0,H*.61,W,H*.39,"#d0b77e");rect(0,H*.72,W,H*.28,"#2a8fa9");
+ const x=W/2+Math.sin(view)*40;ctx.fillStyle="#68462e";ctx.beginPath();ctx.moveTo(x-W*.18,H*.64);ctx.lineTo(x+W*.18,H*.64);ctx.lineTo(x+W*.12,H*.76);ctx.lineTo(x-W*.12,H*.76);ctx.closePath();ctx.fill();rect(x-3,H*.46,6,H*.20,"#563824");
+ text("係留されたボート",x,H*.39,19);text("ボートをタップ",W/2,H*.88,15);
+}
+
+function sequence(title,desc,names,answer,done){
+ let p=0;
+ popup("<h2>"+title+"</h2><p>"+desc+"</p><div class='grid'>"+
+ names.map((n,i)=>"<button id='sq"+i+"'>"+n+"</button>").join("")+
+ "</div><p id='progress'>0 / "+answer.length+"</p>");
+ names.forEach((n,i)=>$("sq"+i).onclick=()=>{
+   if(i!==answer[p]){p=0;$("progress").textContent="失敗。最初から";return}
+   p++;$("progress").textContent=p+" / "+answer.length;
+   if(p===answer.length){done();close();update();draw()}
+ });
+}
+
+function interact(){
+ if(S.stage===1){
+  sequence("三重結び・ロープ解除","6手の順番を正しく入力してください。間違えると結び目が戻ります。",
+  ["A","B","C","D"],[2,3,0,1,3,2],()=>{S.rope=1;S.stage=2;save()});
+ }else if(S.stage===2){
+  if(!S.lever)sequence("油圧レバー","ランプの順番：赤 → 黄 → 緑。",["赤","黄","緑"],[1,0,2],()=>{S.lever=1;save();setTimeout(interact,80)});
+  else if(!S.pin)sequence("安全ピン","短く2回、最後に長く引く。",["短","長"],[0,0,1],()=>{S.pin=1;S.stage=3;save()});
+ }else if(S.stage===3){
+  if(!S.key)sequence("棚の荷札","荷札の大きさを記憶して入力。",["小","中","大"],[2,0,1,2,1],()=>{S.key=1;save()});
+  else if(!S.tool)sequence("工具箱の記号錠","残された記号：△ → ○ → □ → ○",["△","○","□"],[0,1,2,1],()=>{S.tool=1;save()});
+  else if(!S.gear){
+   popup("<h2>青いドラム缶</h2><p>側面の傷跡に「285」と刻まれている。</p><input id='code' class='code' inputmode='numeric' maxlength='3'><button onclick='checkCode()'>開ける</button>");
+  }else if(!S.panel)sequence("制御盤","点滅順：青 → 赤 → 黄 → 青。",["青","赤","黄"],[0,1,2,0],()=>{S.panel=1;save()});
+  else sequence("大扉・最終ロック","集めた情報を統合して入力。",["1","4","7"],[0,1,2],()=>{S.stage=4;save()});
+ }else{
+  sequence("ボートの係留ロック","印の順番：波 → 鳥 → 月。",["波","鳥","月"],[0,1,2],()=>{popup("<h1>脱出成功</h1><p>係留ロープを外し、ボートで島を脱出した。</p><p>— CLEAR —</p><button onclick='localStorage.removeItem(KEY);location.reload()'>最初から</button>")});
+ }
+}
+window.checkCode=()=>{if($("code").value==="285"){S.gear=1;save();close();update();draw()}else alert("番号が違います。")};
+
+cv.addEventListener("pointerdown",e=>{drag=true;lastX=e.clientX});
+cv.addEventListener("pointermove",e=>{if(drag){view+=(e.clientX-lastX)*.006;lastX=e.clientX;draw()}});
+cv.addEventListener("pointerup",e=>{if(!drag)return;const moved=Math.abs(e.clientX-lastX);drag=false;if(moved<12)interact()});
+
+resize();
+if(hasSave())$("resume").classList.remove("hide");
+update();
+</script>
+</body>
+</html>
