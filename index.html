@@ -3,163 +3,858 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#101315">
-<link rel="manifest" href="manifest.webmanifest">
-<title>ISLAND ESCAPE</title>
+<meta name="theme-color" content="#090b0d">
+<title>ISLAND ESCAPE — DRUM BARREL INCIDENT</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101315;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",sans-serif;touch-action:none}
-canvas{position:fixed;inset:0;width:100%;height:100%}.hide{display:none!important}
-#title,#modal{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:#000b;text-align:center}
-#title{background:radial-gradient(circle at 50% 25%,#7a6040,#101010 72%)}
-.box,.card{width:min(92%,560px);padding:24px;border-radius:20px}.box{background:#111c;border:1px solid #806344;box-shadow:0 12px 40px #0008}.card{background:#171717;border:1px solid #806344;max-height:88vh;overflow:auto}
-h1{font-size:clamp(40px,11vw,70px);margin:0 0 8px}h1 span{color:#c73532}.sub{opacity:.65}
-button{font:inherit;color:#fff;background:#292017;border:1px solid #806344;border-radius:12px;padding:12px 16px;margin:5px}.main{display:block;width:100%;margin:10px 0;padding:15px}
-#hud{position:fixed;inset:0;z-index:5;pointer-events:none}.badge{position:absolute;top:12px;left:12px;background:#000b;border:1px solid #fff3;border-radius:12px;padding:8px 11px}.menu{position:absolute;top:12px;right:12px;pointer-events:auto}
-#hint{position:absolute;bottom:13px;left:4%;right:4%;background:#000c;border-radius:13px;padding:10px;text-align:center;font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid button{min-height:52px}.code{font-size:26px;width:140px;padding:8px;text-align:center;background:#222;color:white;border:1px solid #777;border-radius:9px}
-#cross{position:fixed;z-index:4;left:50%;top:50%;width:15px;height:15px;transform:translate(-50%,-50%);opacity:.5;pointer-events:none}.c1,.c2{position:absolute;background:white}.c1{width:15px;height:1px;top:7px}.c2{height:15px;width:1px;left:7px}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b0d;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",sans-serif;touch-action:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;filter:saturate(.92) contrast(1.04)}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:8;background:radial-gradient(ellipse at center,transparent 45%,#0008 100%);mix-blend-mode:multiply}
+
+.hide{display:none!important}
+#boot,#title,#modal,#clear{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;text-align:center;background:#050708}
+#boot{z-index:50;flex-direction:column}
+.spinner{width:42px;height:42px;border:3px solid #ffffff25;border-top-color:#d7b27b;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:18px}@keyframes spin{to{transform:rotate(360deg)}}
+.box,.card{width:min(92%,560px);padding:26px;border-radius:22px;background:#111a;border:1px solid #9a7950;box-shadow:0 20px 60px #000b;backdrop-filter:blur(8px)}
+#title{background:radial-gradient(circle at 50% 24%,#554331 0,#12100d 42%,#050708 80%)}
+h1{font-size:clamp(38px,11vw,72px);letter-spacing:.04em;margin:0 0 4px;line-height:1}h1 span{color:#d44b42}
+.sub{opacity:.62;letter-spacing:.15em;font-size:12px;margin-bottom:25px}
+button{font:inherit;color:#fff;background:linear-gradient(#382c20,#211b15);border:1px solid #8f704d;border-radius:12px;padding:12px 16px;margin:5px;min-height:44px;box-shadow:inset 0 1px #fff1}
+button:active{transform:scale(.97)}.main{display:block;width:100%;margin:9px 0;padding:15px;font-weight:700}
+.small{font-size:12px;opacity:.6}
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none}
+.badge{position:absolute;top:max(12px,env(safe-area-inset-top));left:12px;background:#000b;border:1px solid #fff2;border-radius:13px;padding:8px 11px;font-size:12px;min-width:128px;box-shadow:0 8px 30px #0007}
+.badge b{display:block;font-size:13px}.badge span{display:block;color:#d7b27b;margin-top:3px;font-size:10px}
+.menu{position:absolute;top:max(8px,env(safe-area-inset-top));right:10px;pointer-events:auto;background:#111c}
+#inventory{position:absolute;top:max(66px,calc(env(safe-area-inset-top) + 58px));left:12px;display:flex;gap:5px;max-width:70%;flex-wrap:wrap}
+#puzzleOverlay{position:fixed;z-index:60;inset:0;background:#050708dd;display:none;align-items:center;justify-content:center;padding:18px}#puzzleOverlay.show{display:flex}.puzzleCard{width:min(420px,92vw);background:#171512;border:1px solid #c9a56c66;border-radius:18px;padding:18px;box-shadow:0 25px 80px #000}.puzzleCard h2{margin:0 0 8px}.symbols{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}.symbols button{min-width:58px}.dial{display:flex;gap:8px;justify-content:center;margin:16px 0}.dial button{width:46px;height:46px}.puzzleCard .close{margin-top:8px;background:#222}
+#notebook{position:fixed;z-index:50;inset:10% 7%;display:none;background:#17130f;border:1px solid #c8a66c55;border-radius:18px;padding:18px;box-shadow:0 20px 70px #000c;overflow:auto}#notebook.show{display:block}.note{padding:10px 0;border-bottom:1px solid #fff1}.note b{color:#e5c48c}.notesBtn{position:absolute;top:max(8px,env(safe-area-inset-top));right:58px;pointer-events:auto;background:#111c;font-size:10px}
+#audioBtn{position:fixed;z-index:20;right:10px;top:max(10px,env(safe-area-inset-top));font-size:9px;padding:6px 9px;background:rgba(8,10,10,.65);border:1px solid rgba(214,181,122,.2);border-radius:999px;color:#d9c9ae;backdrop-filter:blur(8px)}
+#qualityBadge{position:fixed;z-index:11;right:10px;bottom:max(10px,env(safe-area-inset-bottom));font-size:8px;letter-spacing:.12em;color:#d9c9ae;opacity:.38;pointer-events:none}
+#objective{position:fixed;z-index:11;left:50%;top:max(62px,calc(env(safe-area-inset-top) + 54px));transform:translateX(-50%);max-width:72vw;padding:6px 11px;border:1px solid rgba(214,181,122,.18);border-radius:999px;background:rgba(5,8,8,.62);backdrop-filter:blur(8px);font-size:10px;color:#ddd0b9;letter-spacing:.05em;pointer-events:none;text-align:center}
+#itemPanel{position:absolute;right:12px;top:max(66px,calc(env(safe-area-inset-top) + 58px));max-width:34%;text-align:right;font-size:10px;color:#ffe1b5;background:#0008;border:1px solid #fff2;border-radius:9px;padding:6px;display:none}
+
+#movePad{position:fixed;z-index:12;right:14px;bottom:max(72px,calc(env(safe-area-inset-bottom) + 70px));width:116px;height:116px;pointer-events:none}
+#movePad button{position:absolute;width:42px;height:42px;padding:0;margin:0;border-radius:50%;background:#111b;border:1px solid #fff3;pointer-events:auto;font-size:22px;opacity:.72}
+#movePad button:nth-child(1){left:0;top:37px}#movePad button:nth-child(2){left:37px;top:0}#movePad button:nth-child(3){left:37px;top:74px}#movePad button:nth-child(4){left:74px;top:37px}
+
+.item{font-size:10px;padding:5px 7px;border:1px solid #ffffff20;background:#0009;border-radius:8px}
+
+#hint{position:absolute;bottom:max(13px,env(safe-area-inset-bottom));left:4%;right:4%;background:#000c;border:1px solid #fff1;border-radius:14px;padding:10px;text-align:center;font-size:13px}
+#look{position:fixed;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);z-index:9;opacity:.55;pointer-events:none}.lookx,.looky{position:absolute;background:#fff}.lookx{width:18px;height:1px;top:9px}.looky{height:18px;width:1px;left:9px}
+#modal{display:none;background:#000b;z-index:30}.card{background:#151515;max-height:88vh;overflow:auto}.card h2{margin-top:0}.card p{line-height:1.7;color:#ddd}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid button{margin:0;min-height:54px}.code{font-size:25px;width:150px;padding:9px;text-align:center;background:#222;color:#fff;border:1px solid #777;border-radius:9px}
+#toast{position:fixed;z-index:40;left:50%;bottom:90px;transform:translateX(-50%) translateY(15px);opacity:0;pointer-events:none;background:#111e;border:1px solid #ffffff25;border-radius:12px;padding:10px 15px;transition:.25s;white-space:nowrap}
+#crosshair{position:fixed;z-index:10;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);pointer-events:none;opacity:.8}#crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff8}#crosshair:before{left:8px;top:0;width:2px;height:18px}#crosshair:after{left:0;top:8px;width:18px;height:2px}#crosshair i,#crosshair b{position:absolute;left:7px;top:7px;width:4px;height:4px;border-radius:50%;background:#fff;display:block}#crosshair.active:before,#crosshair.active:after{background:#ffe0a0}#crosshair.active i,#crosshair.active b{background:#ffd18a}
+#chapterAtmosphere{position:fixed;inset:0;z-index:7;pointer-events:none;opacity:.18;background:radial-gradient(circle at 50% 45%,transparent 20%,#000 100%)}
+#chapterBanner{position:fixed;z-index:30;left:50%;top:14%;transform:translate(-50%,-20px);opacity:0;pointer-events:none;background:#000b;border:1px solid #fff2;border-radius:14px;padding:10px 18px;text-align:center;letter-spacing:.12em;transition:.45s;white-space:nowrap}#chapterBanner.show{opacity:1;transform:translate(-50%,0)}
+#interactLabel{position:fixed;z-index:11;left:50%;top:calc(50% + 30px);transform:translateX(-50%);font-size:11px;letter-spacing:.08em;color:#fff8;background:#0008;border:1px solid #fff2;border-radius:10px;padding:6px 10px;pointer-events:none;opacity:.7;transition:.2s}
+#interactLabel.active{opacity:1;border-color:#d7b27b;color:#ffe2b5;box-shadow:0 0 20px #d7b27b22}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.progress{height:6px;background:#ffffff12;border-radius:5px;overflow:hidden;margin:15px 0}.progress i{display:block;height:100%;background:#b99261;width:0}
+
+/* ===== v12 CINEMATIC VISUAL POLISH ===== */
+html,body{background:#050708}
+canvas{filter:saturate(.88) contrast(1.08) brightness(.92)}
+body:before{content:"";position:fixed;inset:0;z-index:9;pointer-events:none;opacity:.10;
+background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0,rgba(255,255,255,.025) 1px,transparent 1px,transparent 3px);
+mix-blend-mode:soft-light}
+#title{background:
+radial-gradient(ellipse at 50% 18%,rgba(173,116,61,.28),transparent 28%),
+radial-gradient(ellipse at 50% 80%,rgba(24,65,72,.20),transparent 42%),
+linear-gradient(180deg,#0b1011 0%,#11100e 48%,#050708 100%)}
+#title .box{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(24,23,20,.84),rgba(8,10,10,.72));
+border:1px solid rgba(216,181,122,.42);box-shadow:0 28px 90px rgba(0,0,0,.75),inset 0 1px rgba(255,255,255,.08)}
+#title .box:before{content:"";position:absolute;inset:-30%;background:conic-gradient(from 180deg,transparent,rgba(216,181,122,.09),transparent 30%);
+animation:titleGlow 9s linear infinite;pointer-events:none}@keyframes titleGlow{to{transform:rotate(360deg)}}
+#title h1{position:relative;text-shadow:0 4px 30px #000;font-weight:700;letter-spacing:.07em}
+#title h1 span{text-shadow:0 0 22px rgba(212,75,66,.25)}
+#title .sub{position:relative;color:#d7c8ae}
+button{border-color:rgba(214,177,117,.25);box-shadow:0 5px 18px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.06);
+transition:transform .15s,filter .15s,border-color .15s}
+button:active{transform:scale(.97);filter:brightness(1.18)}
+#hud .badge{background:linear-gradient(135deg,rgba(8,12,13,.84),rgba(17,16,14,.68));border-color:rgba(222,193,145,.25);
+backdrop-filter:blur(12px);box-shadow:0 10px 35px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.07)}
+#inventory .item{background:linear-gradient(135deg,rgba(41,34,25,.92),rgba(18,19,18,.9));border-color:rgba(214,177,117,.22);
+backdrop-filter:blur(9px);font-size:10px;padding:7px 9px}
+#itemPanel{background:linear-gradient(135deg,rgba(15,17,17,.88),rgba(38,28,20,.72));backdrop-filter:blur(12px);
+border-color:rgba(214,177,117,.28);box-shadow:0 10px 30px #0007}
+#hint{background:linear-gradient(90deg,rgba(5,8,9,.82),rgba(22,18,13,.75),rgba(5,8,9,.82));backdrop-filter:blur(12px);
+border-color:rgba(214,177,117,.20);box-shadow:0 10px 35px #0008}
+#interactLabel{background:rgba(6,8,8,.78);backdrop-filter:blur(10px);box-shadow:0 8px 30px #0007}
+#toast{backdrop-filter:blur(10px);box-shadow:0 12px 35px #0008}
+#chapterBanner{background:linear-gradient(135deg,rgba(7,10,10,.9),rgba(45,32,20,.82));
+border-color:rgba(226,190,127,.38);box-shadow:0 15px 55px #000a}
+.card,.puzzleCard,#notebook{background:linear-gradient(145deg,rgba(25,24,21,.97),rgba(10,12,12,.96));
+border-color:rgba(216,181,122,.32);box-shadow:0 30px 100px #000d,inset 0 1px rgba(255,255,255,.06)}
+#crosshair{filter:drop-shadow(0 0 5px rgba(255,220,160,.35))}
+
+
+/* ===== v13 LIGHTWEIGHT QUALITY PACK ===== */
+:root{
+ --gold:#d6b57a;--glass:rgba(9,12,12,.72);--line:rgba(214,181,122,.22);
+}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display","Hiragino Sans",sans-serif;letter-spacing:.015em}
+button{font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#hud{filter:drop-shadow(0 8px 25px rgba(0,0,0,.25))}
+#hint{letter-spacing:.045em}
+#inventory .item{min-height:31px}
+#chapterBanner b{font-size:15px;letter-spacing:.16em}
+#chapterBanner small{opacity:.7;letter-spacing:.08em}
+#notebook h2,.puzzleCard h2{letter-spacing:.08em}
+#notebook{background:
+ linear-gradient(135deg,rgba(31,27,22,.97),rgba(8,11,11,.98)),
+ repeating-linear-gradient(0deg,transparent 0,transparent 28px,rgba(216,181,122,.035) 29px);
+}
+#notebook .note{position:relative;padding-left:16px}
+#notebook .note:before{content:"";position:absolute;left:0;top:17px;width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px rgba(214,181,122,.4)}
+/* cheap animated light, only opacity/transform */
+#lightSweep{position:fixed;inset:0;z-index:8;pointer-events:none;overflow:hidden;opacity:.08}
+#lightSweep:after{content:"";position:absolute;top:-20%;left:-35%;width:24%;height:150%;
+background:linear-gradient(90deg,transparent,rgba(255,225,170,.9),transparent);
+transform:rotate(18deg);animation:sweep 12s ease-in-out infinite}
+@keyframes sweep{0%,65%{left:-35%;opacity:0}72%{opacity:1}90%,100%{left:120%;opacity:0}}
+/* subtle scene grain without an image asset */
+#grain{position:fixed;inset:0;z-index:8;pointer-events:none;opacity:.045;
+background-image:radial-gradient(rgba(255,255,255,.55) .5px,transparent .6px);
+background-size:4px 4px}
+
 </style>
 </head>
 <body>
+<div id="boot"><div class="spinner"></div><b>ISLAND ESCAPE</b><div class="small">WORLD INITIALIZING…</div></div>
 <canvas id="cv"></canvas>
+<div id="crosshair"><i></i><b></b></div><div id="interactLabel">タップして調べる</div><div id="chapterBanner"></div><div id="chapterAtmosphere"></div><div id="lightSweep"></div><div id="grain"></div>
 
-<div id="title">
- <div class="box">
-  <h1>ISLAND <span>ESCAPE</span></h1>
-  <div class="sub">DRUM BARREL INCIDENT</div>
-  <button class="main" onclick="newGame()">ゲーム開始</button>
-  <button class="main hide" id="resume" onclick="resumeGame()">つづきから</button>
-  <button class="main" onclick="showHelp()">遊び方</button>
- </div>
-</div>
+<div id="title"><div class="box">
+<h1>ISLAND <span>ESCAPE</span></h1>
+<div class="sub">DRUM BARREL INCIDENT</div>
+<p class="small">あなたは倉庫のドラム缶に閉じ込められた。<br>手がかりを集め、島から脱出せよ。</p>
+<button class="main" onclick="newGame()">ゲーム開始</button>
+<button class="main hide" id="resume" onclick="resumeGame()">つづきから</button>
+<button class="main" onclick="showHelp()">遊び方</button>
+<div class="small">自動セーブ対応・iPhone / iPad最適化</div><div class="small" style="opacity:.42;margin-top:6px">CINEMATIC LIGHT · MOBILE OPTIMIZED</div>
+<div class="small" style="margin-top:12px">探索 → 調査 → アイテム使用 → 脱出</div>
+</div></div>
 
 <div id="hud">
- <div class="badge" id="stage"></div>
- <button class="menu" onclick="showMenu()">☰</button>
- <div id="hint"></div>
+<div class="badge"><b id="stage"></b><span id="objective"></span></div>
+<button class="menu" onclick="showMenu()">☰</button><button class="notesBtn" onclick="openNotebook()">NOTE</button>
+<div id="inventory"></div><div id="itemPanel"></div><div id="objective"></div><div id="qualityBadge">MOBILE · LIGHT</div><button id="audioBtn" onclick="toggleAudio()">♪ BGM ON</button><div id="notebook"></div><div id="puzzleOverlay"></div>
+<div id="hint"></div>
 </div>
-<div id="cross"><i class="c1"></i><i class="c2"></i></div>
-
+<div id="look"><i class="lookx"></i><i class="looky"></i></div>
+<div id="movePad"><button data-m="left">‹</button><button data-m="forward">↑</button><button data-m="back">↓</button><button data-m="right">›</button></div>
 <div id="modal"><div class="card" id="card"></div></div>
+<div id="toast"></div>
 
 <script>
 "use strict";
 const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
-let W=0,H=0,dpr=1,drag=false,lastX=0,view=0;
-const KEY="islandEscapeV1";
-let S={stage:1,rope:0,lever:0,pin:0,key:0,tool:0,gear:0,panel:0};
-const $=id=>document.getElementById(id);
+let W=0,H=0,dpr=1,view=0,downX=0,downY=0,moved=false,dragging=false;
+let player={x:0,z:0,yaw:0};
+let seaTime=0,finalLock=false,scenePulse=0,notes=[],puzzleDigits=[0,0,0],puzzleTarget=[2,8,5];
+let audioCtx=null,lastStep=0,startedAudio=false;
+let move={left:false,right:false,forward:false,back:false};
+let focusObject=null,selectedItem=null;
+const itemInfo={
+ rope:{label:"ロープ",desc:"解いたロープ。使い道はまだない。"},
+ lever:{label:"レバー",desc:"油圧ロックを解除した。"},
+ pin:{label:"安全ピン",desc:"古い安全ピン。ロック機構に使える。"},
+ key:{label:"荷札の情報",desc:"棚の荷札から得た順番。"},
+ tool:{label:"工具",desc:"工具箱から入手した小型工具。"},
+ gear:{label:"予備電源",desc:"制御盤に接続できる電源ユニット。"},
+ panel:{label:"制御盤情報",desc:"制御盤の点滅順を記録した。"}
+};
+const objects3D=[
+ {id:"tool",name:"工具箱",x:-1.3,z:.4},
+ {id:"drum",name:"青いドラム缶",x:1.2,z:1.4},
+ {id:"panel",name:"制御盤",x:2.6,z:.1},
+ {id:"shelf",name:"棚の荷札",x:-2.8,z:1.6},
+ {id:"door",name:"大扉",x:3.1,z:3.7},
+ {id:"clock",name:"古い壁時計",x:-2.8,z:-1.1},
+ {id:"wall",name:"壁の傷跡",x:-3.0,z:-2.6}
+];
 
-function resize(){
- W=innerWidth;H=innerHeight;dpr=Math.min(devicePixelRatio||1,2);
- cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";
- ctx.setTransform(dpr,0,0,dpr,0,0);draw();
-}
+const KEY="islandEscapeV2";
+let S={stage:1,rope:0,lever:0,pin:0,key:0,tool:0,gear:0,panel:0,door:0,boat:0};
+
+const $=id=>document.getElementById(id);
+function resize(){W=innerWidth;H=innerHeight;dpr=Math.min(devicePixelRatio||1,2);cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
 addEventListener("resize",resize);
 
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+
+
+
+function updateObjective(){
+ const o=$("objective"); if(!o)return;
+ let t="探索を始める";
+ if(S.stage===1)t=S.rope?"ドラム缶から脱出する":"ロープの結び目を調べる";
+ if(S.stage===2)t=!S.lever?"ロックを解除する":!S.pin?"安全機構を探す":"倉庫へ進む";
+ if(S.stage===3){
+   if(!S.key)t="倉庫を探索して荷札の手がかりを探す";
+   else if(!S.tool)t="工具箱を調べる";
+   else if(!S.gear)t="予備電源の手がかりを探す";
+   else if(!S.panel)t="制御盤を復旧する";
+   else if(!S.door)t="大扉のロックを解除する";
+   else t="海岸へ向かう";
+ }
+ if(S.stage===4)t=finalLock?"ボートを出航させる":"係留ロックを外してボートへ";
+ o.textContent=t;o.style.borderColor=(S.stage===3&&!S.panel)?"rgba(216,181,122,.30)":"rgba(214,181,122,.18)";
+}
+function setAtmosphere(){
+ const a=$("chapterAtmosphere");
+ if(!a)return;
+ if(S.stage===1)a.style.background="radial-gradient(circle at 50% 40%,#7d4d25 0%,transparent 35%,#000 100%)";
+ else if(S.stage===2)a.style.background="radial-gradient(circle at 50% 45%,#34585b 0%,transparent 38%,#000 100%)";
+ else if(S.stage===3)a.style.background="radial-gradient(circle at 52% 42%,#6b5740 0%,transparent 32%,#000 100%)";
+ else a.style.background="radial-gradient(circle at 70% 25%,#f3bd75 0%,transparent 34%,#12313b 100%)";
+}
+function chapterBanner(title,sub){
+ const el=$("chapterBanner");
+ el.innerHTML=`<b>${title}</b><br><small>${sub}</small>`;
+ el.classList.add("show");
+ setTimeout(()=>el.classList.remove("show"),2600);
+}
+function startAudio(){
+ if(startedAudio)return;
+ try{
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  startedAudio=true;
+ }catch(e){}
+}
+function tone(freq,duration=.08,type="sine",gain=.025){
+ if(!audioCtx)return;
+ const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+ o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(gain,audioCtx.currentTime);
+ g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+duration);
+ o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration);
+}
+function stepSound(){
+ const now=performance.now();
+ if(now-lastStep<230)return;
+ lastStep=now;tone(70,.045,"triangle",.018);
+}
+function successSound(){sfx("ok");tone(520,.09,"sine",.035);setTimeout(()=>tone(780,.14,"sine",.03),80)}
+function errorSound(){sfx("bad");tone(120,.12,"sawtooth",.025)}
+
+
+function closePuzzle(){
+ $("puzzleOverlay").classList.remove("show");
+ $("puzzleOverlay").innerHTML="";
+}
+function openDialPuzzle(){
+ const el=$("puzzleOverlay");
+ el.innerHTML=`<div class="puzzleCard">
+ <h2>隠し金庫</h2>
+ <p>壁の傷跡、時計、荷札の情報を組み合わせて3桁を完成させる。</p>
+ <div class="dial">${[0,1,2].map(i=>`<button onclick="turnDial(${i},-1)">−</button><b id="digit${i}" style="font-size:30px;min-width:30px;text-align:center">${puzzleDigits[i]}</b><button onclick="turnDial(${i},1)">＋</button>`).join("")}</div>
+ <button onclick="checkDial()">解除する</button>
+ <button class="close" onclick="closePuzzle()">戻る</button>
+ </div>`;
+ el.classList.add("show");
+}
+function turnDial(i,d){
+ puzzleDigits[i]=(puzzleDigits[i]+d+10)%10;
+ const el=$("digit"+i);if(el)el.textContent=puzzleDigits[i];
+ tone(240+puzzleDigits[i]*30,.04,"square",.015);
+}
+function checkDial(){
+ if(puzzleDigits.join("")==="285"){
+   S.hidden=1;
+   addNote("隠し金庫","3桁の番号は285。金庫の中から予備電源を見つけた。");
+   S.gear=1;selectedItem="gear";save();closePuzzle();update();draw();successSound();toast("隠し金庫が開いた");
+ }else{
+   errorSound();toast("ロックが開かない");
+ }
+}
+function addNote(title,text){
+ notes=notes.filter(n=>n.title!==title);
+ notes.push({title,text});
+ save();
+ updateNotebook();
+}
+function updateNotebook(){
+ const el=$("notebook"); if(!el)return;
+ el.innerHTML=`<h2>探索ノート</h2><p class="small">見つけた手がかりはここに残ります。</p>`+
+ (notes.length?notes.map(n=>`<div class="note"><b>${n.title}</b><br>${n.text}</div>`).join(""):"<p>まだ手がかりがありません。</p>")+
+ `<button onclick="$('notebook').classList.remove('show')">閉じる</button>`;
+}
+function openNotebook(){updateNotebook();$("notebook").classList.add("show");}
+function combineSelectedWithFocus(){
+ if(!selectedItem||!focusObject)return false;
+ if(focusObject.id==="panel"&&selectedItem==="gear"){
+   S.gear=1;
+   addNote("制御盤","予備電源を接続すると、青→赤→黄→青の点滅が始まる。");
+   selectedItem=null;
+   sequence("制御盤","点滅順を入力する。",["青","赤","黄"],[0,1,2,0],()=>{S.panel=1;save();update()});
+   return true;
+ }
+ if(focusObject.id==="drum"&&selectedItem==="tool"){
+   addNote("青いドラム缶","工具でこじ開けると内部に予備電源ユニットがある。");
+   toast("工具を使ってドラム缶を開けた");
+   selectedItem=null;
+   S.gear=1;save();update();return true;
+ }
+ return false;
+}
+
+/* ===== v15 PROCEDURAL CINEMATIC BGM ===== */
+let audioCtx=null,masterGain=null,bgmGain=null,noiseGain=null,audioOn=false,audioTimer=null;
+let stageAudio=0, audioNodes=[];
+function initAudio(){
+ if(audioCtx)return;
+ const AC=window.AudioContext||window.webkitAudioContext;
+ if(!AC){toast("この端末ではBGMを利用できません");return}
+ audioCtx=new AC();
+ masterGain=audioCtx.createGain();masterGain.gain.value=.55;masterGain.connect(audioCtx.destination);
+ bgmGain=audioCtx.createGain();bgmGain.gain.value=.16;bgmGain.connect(masterGain);
+ noiseGain=audioCtx.createGain();noiseGain.gain.value=.025;noiseGain.connect(masterGain);
+ startStageMusic();
+}
+function osc(freq,dur,type="sine",gain=.04,when=0){
+ if(!audioCtx)return;
+ const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+ o.type=type;o.frequency.setValueAtTime(freq,audioCtx.currentTime+when);
+ g.gain.setValueAtTime(.0001,audioCtx.currentTime+when);
+ g.gain.exponentialRampToValueAtTime(gain,audioCtx.currentTime+when+.06);
+ g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+when+dur);
+ o.connect(g);g.connect(bgmGain);o.start(audioCtx.currentTime+when);o.stop(audioCtx.currentTime+when+dur+.08);
+}
+function kick(){
+ if(!audioCtx)return;
+ const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+ o.type="sine";o.frequency.setValueAtTime(90,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(42,audioCtx.currentTime+.18);
+ g.gain.setValueAtTime(.0001,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.08,audioCtx.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+.25);
+ o.connect(g);g.connect(bgmGain);o.start();o.stop(audioCtx.currentTime+.28);
+}
+function padChord(root){
+ const ratios=[1,1.25,1.5,2];
+ ratios.forEach((r,i)=>osc(root*r,2.8,"sine",.012,i*.08));
+}
+function startStageMusic(){
+ if(!audioCtx)return;
+ if(audioTimer)clearInterval(audioTimer);
+ const seqs={
+  1:[55,65.41,73.42,65.41],
+  2:[65.41,73.42,82.41,73.42],
+  3:[49,55,61.74,55],
+  4:[55,65.41,73.42,98]
+ };
+ const seq=seqs[S.stage]||seqs[1];let i=0;
+ padChord(seq[0]);
+ audioTimer=setInterval(()=>{
+   if(!audioOn)return;
+   const root=seq[i%seq.length];
+   padChord(root);
+   osc(root*2,.65,"triangle",.018);
+   if(S.stage>=3 && i%4===0)kick();
+   if(S.stage===4 && i%2===1)osc(root*3,.35,"sine",.014);
+   i++;
+ },1450);
+}
+function stageAudioUpdate(){
+ if(!audioCtx||!audioOn)return;
+ if(stageAudio!==S.stage){stageAudio=S.stage;startStageMusic();}
+}
+function toggleAudio(){
+ if(!audioCtx)initAudio();
+ if(!audioCtx)return;
+ audioOn=!audioOn;
+ if(audioCtx.state==="suspended")audioCtx.resume();
+ bgmGain.gain.setTargetAtTime(audioOn?.16:0,audioCtx.currentTime,.35);
+ noiseGain.gain.setTargetAtTime(audioOn?.025:0,audioCtx.currentTime,.35);
+ $("audioBtn").textContent=audioOn?"♪ BGM ON":"♪ BGM OFF";
+}
+function sfx(type){
+ if(!audioCtx||!audioOn)return;
+ const map={click:[520,.06],ok:[660,.14],bad:[130,.18],open:[330,.35],wave:[180,.4]};
+ const [f,d]=map[type]||map.click;
+ osc(f,d,type==="bad"?"sawtooth":"sine",type==="bad"?.035:.028);
+ if(type==="ok")osc(f*1.5,.18,"sine",.02,.08);
+}
+function save(){try{S.notes=notes;localStorage.setItem(KEY,JSON.stringify(S));toast("進行状況を保存しました")}catch(e){}}
 function hasSave(){try{return !!localStorage.getItem(KEY)}catch(e){return false}}
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x){S=x;return true}}catch(e){}return false}
-function newGame(){S={stage:1,rope:0,lever:0,pin:0,key:0,tool:0,gear:0,panel:0};save();$("title").classList.add("hide");update();draw()}
+function load(){try{let x=JSON.parse(localStorage.getItem(KEY));if(x){S=Object.assign(S,x);return true}}catch(e){}return false}
+function newGame(){S={stage:1,rope:0,lever:0,pin:0,key:0,tool:0,gear:0,panel:0,door:0,boat:0};save();$("title").classList.add("hide");update();draw()}
 function resumeGame(){if(!load())return newGame();$("title").classList.add("hide");update();draw()}
 function update(){
- $("stage").textContent="STAGE "+S.stage;
- $("hint").textContent=[
-  "ドラム缶の中。中央の結び目をタップしてロープを解く。",
-  "レバーと安全ピンを解除してドラム缶から脱出する。",
-  "倉庫の謎を順番に解いて大扉を開ける。",
-  "海岸のボートを調べて島から脱出する。"
- ][S.stage-1];
+setAtmosphere();updateObjective();stageAudioUpdate();
+const objectives=[
+"結び目を解除する",
+"2つのロックを解除する",
+"大扉の電源を復旧する",
+"ボートで島を脱出する"
+];
+$("stage").textContent="STAGE "+S.stage+" / 4";
+$("objective").textContent=objectives[Math.max(0,Math.min(3,S.stage-1))];
+const items=[];
+if(S.rope)items.push(["rope","ロープ解除"]);
+if(S.lever)items.push(["lever","レバー"]);
+if(S.pin)items.push(["pin","安全ピン"]);
+if(S.key)items.push(["key","荷札の情報"]);
+if(S.tool)items.push(["tool","工具"]);
+if(S.gear)items.push(["gear","予備電源"]);
+if(S.panel)items.push(["panel","制御盤情報"]);
+$("inventory").innerHTML=items.map(([id,label])=>`<button class="item" onclick="selectItem('${id}')">${selectedItem===id?"▶ ":""}${label}</button>`).join("");
+if(selectedItem && itemInfo[selectedItem]){
+$("itemPanel").style.display="block";
+$("itemPanel").textContent=itemInfo[selectedItem].desc;
+}else $("itemPanel").style.display="none";
+if(notes.length>=3 && S.stage===3) $("hint").textContent="NOTEを確認し、見つけた手がかりを組み合わせよう。";
+$("hint").textContent=[
+"暗いドラム缶の中。結び目の構造を見抜いてロープを解く。",
+"レバーと安全ピン。2段階のロックを解除して外へ出る。",
+"倉庫の手がかりを集め、制御盤を操作して大扉を開ける。",
+"海岸のボート。最後の係留ロックを解除して島を脱出する。"
+][Math.max(0,Math.min(3,S.stage-1))];
+if(notes.length>=3 && S.stage===3) $("hint").textContent="NOTEを確認し、見つけた手がかりを組み合わせよう。";
 }
 function popup(html){$("card").innerHTML=html;$("modal").style.display="flex"}
-function close(){ $("modal").style.display="none" }
-function showHelp(){popup("<h2>遊び方</h2><p>画面を左右にスワイプすると視点が動きます。中央の照準が気になる場所に来たらタップ。</p><p>進行状況は自動保存されます。</p><button onclick='close()'>閉じる</button>")}
-function showMenu(){popup("<h2>メニュー</h2><p>セーブは自動です。</p><button onclick='close()'>戻る</button><button onclick='localStorage.removeItem(KEY);location.reload()'>セーブ削除</button>")}
+function close(){$("modal").style.display="none"}
+window.close=close;
+function toast(s){let e=$("toast");e.textContent=s;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("show"),1400)}
+function showHelp(){popup("<h2>遊び方</h2><p>画面を左右にスワイプして視点を動かします。画面を軽くタップすると、中央の照準が向いている場所を調べます。</p><p>謎解きに失敗しても最初からやり直せます。進行状況は自動保存されます。</p><button onclick='close()'>閉じる</button>")}
+function showMenu(){popup("<h2>メニュー</h2><p>現在の進行状況は自動保存されています。</p><button onclick='close()'>ゲームに戻る</button><button onclick='if(confirm(\"セーブを削除しますか？\")){localStorage.removeItem(KEY);location.reload()}'>セーブ削除</button>")}
 
-function bg(a,b){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,a);g.addColorStop(1,b);ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
-function text(s,x,y,z=18){ctx.fillStyle="#fff";ctx.font=z+"px sans-serif";ctx.textAlign="center";ctx.fillText(s,x,y)}
+function bg(a,b){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,a);g.addColorStop(1,b);ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
 function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
 function circle(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+function text(s,x,y,z=18,alpha=1){ctx.fillStyle=`rgba(255,255,255,${alpha})`;ctx.font=`${z}px -apple-system,BlinkMacSystemFont,"Yu Gothic",sans-serif`;ctx.textAlign="center";ctx.fillText(s,x,y)}
+function line(x1,y1,x2,y2,c,w=1){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
+function floor(c){rect(0,H*.68,W,H*.32,c);ctx.strokeStyle="#ffffff12";for(let i=0;i<=10;i++){line(i*W/10,H*.68,W/2+(i-5)*W*.36,H,"#ffffff12",1)}}
 
+let particles=[];
+function initParticles(){
+particles=Array.from({length:55},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.8+.3,v:Math.random()*.00025+.00008,a:Math.random()*.45+.12}));
+}
+function ambient(){
+const t=performance.now();
+for(const p of particles){
+p.y-=p.v;if(p.y<0)p.y=1;
+ctx.fillStyle=`rgba(220,190,140,${p.a})`;
+ctx.beginPath();ctx.arc(p.x*W,p.y*H,p.r,0,Math.PI*2);ctx.fill();
+}
+const glow=ctx.createRadialGradient(W*.5,H*.45,20,W*.5,H*.45,Math.max(W,H)*.65);
+glow.addColorStop(0,"rgba(255,220,160,.02)");glow.addColorStop(1,"rgba(0,0,0,.22)");
+ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+}
+
+function shade(hex,amount){
+const n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amount)),g=Math.max(0,Math.min(255,((n>>8)&255)+amount)),b=Math.max(0,Math.min(255,(n&255)+amount));
+return `rgb(${r},${g},${b})`;
+}
+function project(x,z,y=0){
+const dx=x-player.x,dz=z-player.z;
+const ca=Math.cos(player.yaw),sa=Math.sin(player.yaw);
+const cx=dx*ca-dz*sa,cz=dx*sa+dz*ca;
+if(cz<.25)return null;
+const f=Math.min(W,H)*.72;
+return {x:W/2+(cx/cz)*f,y:H*.55-(y/cz)*f,z:cz};
+}
+function cube(x,z,w,d,h,c){
+const a=project(x-w/2,z-d/2,0),b=project(x+w/2,z-d/2,0),c1=project(x+w/2,z+d/2,0),d1=project(x-w/2,z+d/2,0);
+const t1=project(x-w/2,z-d/2,h),t2=project(x+w/2,z-d/2,h),t3=project(x+w/2,z+d/2,h),t4=project(x-w/2,z+d/2,h);
+if(!a||!b||!c1||!d1||!t1||!t2||!t3||!t4)return;
+ctx.fillStyle=shade(c,-18);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(t2.x,t2.y);ctx.lineTo(t1.x,t1.y);ctx.closePath();ctx.fill();
+ctx.fillStyle=shade(c,8);ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(c1.x,c1.y);ctx.lineTo(t3.x,t3.y);ctx.lineTo(t2.x,t2.y);ctx.closePath();ctx.fill();
+ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(t1.x,t1.y);ctx.lineTo(t2.x,t2.y);ctx.lineTo(t3.x,t3.y);ctx.lineTo(t4.x,t4.y);ctx.closePath();ctx.fill();
+}
+function updateMovement(){
+let speed=.025;
+if(move.forward)player.z+=Math.cos(player.yaw)*speed,player.x+=Math.sin(player.yaw)*speed;
+if(move.back)player.z-=Math.cos(player.yaw)*speed,player.x-=Math.sin(player.yaw)*speed;
+if(move.left)player.x-=Math.cos(player.yaw)*speed,player.z+=Math.sin(player.yaw)*speed;
+if(move.right)player.x+=Math.cos(player.yaw)*speed,player.z-=Math.sin(player.yaw)*speed;
+if(move.forward||move.back||move.left||move.right)stepSound();
+player.x=Math.max(-3.8,Math.min(3.8,player.x));player.z=Math.max(-4.5,Math.min(4.5,player.z));
+}
+
+function findFocusObject(){
+focusObject=null;
+let best=999;
+for(const o of objects3D){
+ const dx=o.x-player.x,dz=o.z-player.z;
+ const dist=Math.hypot(dx,dz);
+ const angle=Math.atan2(dx,dz)-player.yaw;
+ const a=Math.atan2(Math.sin(angle),Math.cos(angle));
+ if(dist<2.15 && Math.abs(a)<.42 && dist<best){best=dist;focusObject=o;}
+}
+const label=$("interactLabel");
+if(focusObject){
+ const dist=Math.hypot(focusObject.x-player.x,focusObject.z-player.z);
+label.textContent=`「${focusObject.name}」を調べる  ·  ${dist.toFixed(1)}m`;
+ label.classList.add("active");
+}else{
+ $("crosshair").classList.remove("active");
+ label.textContent="中央の照準を合わせてタップ";
+ label.classList.remove("active");
+}
+}
+
+function selectItem(id){
+ selectedItem=(selectedItem===id)?null:id;
+ update();
+ if(selectedItem)toast(itemInfo[selectedItem]?.label+"を選択");
+}
+function useSelectedItemOnObject(){
+ if(combineSelectedWithFocus())return true;
+ if(!selectedItem||!focusObject)return false;
+ if(focusObject.id==="tool"&&selectedItem==="tool"){toast("工具箱を調べた");return true}
+ return false;
+}
+function inspectWarehouseObject(){
+if(S.stage!==3)return;
+if(!focusObject){toast("近づいて調べられる場所を探してください");return;}
+if(useSelectedItemOnObject())return;
+switch(focusObject.id){
+case "clock":
+ addNote("壁時計","針は2時を示している。時計の裏に小さな数字「8」が刻まれている。");
+ popup("<h2>古い壁時計</h2><p>止まった針は2時。裏側に小さく「8」と刻まれている。</p><button onclick='close()'>閉じる</button>");
+ break;
+case "wall":
+ if(!S.tool){toast("薄い金属板を開ける道具が必要だ");return}
+ addNote("壁の傷跡","傷跡は3つ。深い傷が右側にあり、数字「5」が読める。");
+ popup("<h2>壁の傷跡</h2><p>工具でこじ開けられそうな薄い金属板がある。中央に「5」と刻まれている。</p><button onclick='close();openDialPuzzle()'>金属板を調べる</button>");
+ break;
+case "shelf":
+ if(!S.key)sequence("棚の荷札","荷札の裏に残された記号の順番を入力する。",["小","中","大"],[2,0,1,2,1],()=>{S.key=1;save()});
+ else popup("<h2>棚</h2><p>埃をかぶった荷札が並んでいる。もう必要な情報は回収済みだ。</p><button onclick='close()'>閉じる</button>");
+ break;
+case "tool":
+ if(!S.tool){
+   if(!S.key){toast("棚の荷札を先に調べよう");return}
+   sequence("工具箱・記号錠","棚で見つけた順番を使う。",["△","○","□"],[0,1,2,1],()=>{S.tool=1;selectedItem="tool";addNote("工具","工具箱から小型ドライバーを入手した。壁の薄い金属板に使えそうだ。");save();update()});
+ }else toast("工具箱は空になっている");
+ break;
+case "drum":
+ if(!S.gear){
+   if(!S.tool){toast("工具箱を調べてからにしよう");return}
+   popup(`<h2>青いドラム缶</h2><p>側面の傷跡から「285」という数字が読める。工具箱で手に入れた道具を使えば開けられそうだ。</p><input id="code" class="code" inputmode="numeric" maxlength="3" placeholder="285"><button onclick="checkCode()">開ける</button>`);
+ }else toast("青いドラム缶は調査済み");
+ break;
+case "panel":
+ if(!S.gear){toast("予備電源が必要だ");return}
+ if(!S.panel)sequence("制御盤","点滅記録：青 → 赤 → 黄 → 青",["青","赤","黄"],[0,1,2,0],()=>{S.panel=1;save()});
+ else toast("制御盤は復旧している");
+ break;
+case "door":
+ if(!S.panel){toast("制御盤を復旧させよう");return}
+ if(!S.door)sequence("大扉・最終ロック","集めた情報から解除手順を組み立てる。",["1","4","7"],[0,1,2],()=>{S.door=1;S.stage=4;save()});
+ else {S.stage=4;save();setAtmosphere();stageAudio=0;chapterBanner("CHAPTER 4","THE LAST BOAT");stageMessage("大扉が開いた","重い鉄扉が軋みながら開いた。外から潮の匂いが流れ込んでくる。","update();draw()");}
+ break;
+}
+}
+function draw3DWarehouse(){
+ updateMovement();findFocusObject();
+
+ const t=performance.now()*0.001;
+ const sky=ctx.createLinearGradient(0,0,0,H);
+ sky.addColorStop(0,"#070b0d");sky.addColorStop(.40,"#18232a");sky.addColorStop(.72,"#26231f");sky.addColorStop(1,"#161311");
+ ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+
+ /* distant wall with large industrial panels */
+ ctx.fillStyle="#202a2e";ctx.fillRect(0,H*.20,W,H*.40);
+ for(let x=0;x<=W;x+=W/7){
+   ctx.fillStyle="rgba(0,0,0,.16)";ctx.fillRect(x,H*.20,2,H*.40);
+ }
+ for(let y=H*.28;y<H*.59;y+=H*.10){
+   ctx.fillStyle="rgba(214,181,122,.035)";ctx.fillRect(0,y,W,1);
+ }
+
+ /* floor perspective */
+ ctx.fillStyle="#24201c";ctx.fillRect(0,H*.59,W,H*.41);
+ for(let z=-5;z<=8;z+=.65){
+   const a=project(-5,z),b=project(5,z);
+   if(a&&b)line(a.x,a.y,b.x,b.y,"rgba(190,165,125,.045)",1);
+ }
+ for(let x=-5;x<=5;x+=.65){
+   const a=project(x,-5),b=project(x,8);
+   if(a&&b)line(a.x,a.y,b.x,b.y,"rgba(190,165,125,.03)",1);
+ }
+
+ /* ceiling beams + hanging lamps */
+ for(let z=-3;z<=7;z+=1.7){
+   const a=project(-4,z,3.25),b=project(4,z,3.25);
+   if(a&&b)line(a.x,a.y,b.x,b.y,"#494039",6);
+   const p=project(0,z,3.18);
+   if(p){
+     ctx.fillStyle="#554b3d";ctx.fillRect(p.x-4,p.y-2,8,12);
+     const glow=ctx.createRadialGradient(p.x,p.y+10,2,p.x,p.y+10,72);
+     glow.addColorStop(0,"rgba(255,225,170,.18)");
+     glow.addColorStop(1,"rgba(255,225,170,0)");
+     ctx.fillStyle=glow;ctx.fillRect(p.x-75,p.y-60,150,150);
+     circle(p.x,p.y+10,3,"#d8b57d");
+   }
+ }
+
+ /* wall-mounted warning sign */
+ const sign=project(-.4,4.92,2.0);
+ if(sign){
+   ctx.save();ctx.translate(sign.x,sign.y);
+   ctx.fillStyle="#4b3924";ctx.fillRect(-30,-12,60,24);
+   ctx.strokeStyle="#a17c43";ctx.strokeRect(-30,-12,60,24);
+   ctx.fillStyle="#d0a04d";
+   ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(9,8);ctx.lineTo(-9,8);ctx.closePath();ctx.fill();
+   ctx.restore();
+ }
+
+ /* stacked crates, each with simple highlights */
+ const crates=[
+   [-3.15,2.1,.9,.72,.85,"#5d4937"],
+   [-2.45,2.15,.9,.72,.85,"#684d37"],
+   [-3.0,1.35,1.0,.78,.9,"#4e4439"],
+   [1.75,2.55,.85,.70,1.0,"#59483a"],
+   [2.35,2.65,.85,.70,1.0,"#66503c"],
+ ];
+ crates.sort((a,b)=>b[1]-a[1]).forEach(o=>cube(...o));
+
+ /* shelf */
+ const shelf=project(-2.8,1.6,0);
+ if(shelf){
+   for(let i=0;i<3;i++){
+     ctx.fillStyle="#40372f";ctx.fillRect(shelf.x-46,shelf.y-70+i*28,92,5);
+   }
+ }
+
+ /* tool box */
+ const tool=project(-1.3,.4,.45);
+ if(tool){
+   ctx.fillStyle="#8c4b3d";ctx.fillRect(tool.x-28,tool.y-18,56,34);
+   ctx.fillStyle="#5e3029";ctx.fillRect(tool.x-31,tool.y-23,62,9);
+   ctx.strokeStyle="#c48a67";ctx.lineWidth=2;ctx.strokeRect(tool.x-24,tool.y-15,48,28);
+   ctx.fillStyle="#d0aa6e";ctx.fillRect(tool.x-7,tool.y-27,14,6);
+ }
+
+ /* blue drum */
+ const drum=project(1.2,1.4,.78);
+ if(drum){
+   ctx.fillStyle="#244b54";ctx.beginPath();ctx.ellipse(drum.x,drum.y-42,27,8,0,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle="#315e67";ctx.fillRect(drum.x-27,drum.y-42,54,48);
+   ctx.strokeStyle="#88a5a1";ctx.lineWidth=2;ctx.strokeRect(drum.x-27,drum.y-42,54,48);
+   ctx.strokeStyle="#6d8b89";ctx.beginPath();ctx.ellipse(drum.x,drum.y+6,27,8,0,0,Math.PI*2);ctx.stroke();
+   ctx.fillStyle="#b7c4bd";ctx.fillRect(drum.x-3,drum.y-38,6,4);
+ }
+
+ /* control panel */
+ const panel=project(2.6,.1,1.0);
+ if(panel){
+   ctx.fillStyle="#2b2b28";ctx.fillRect(panel.x-22,panel.y-58,44,72);
+   ctx.strokeStyle="#82735d";ctx.strokeRect(panel.x-22,panel.y-58,44,72);
+   for(let i=0;i<3;i++){
+     const yy=panel.y-35+i*17;
+     circle(panel.x-10,yy,3,["#3c90a0","#a74b43","#b18a47"][i]);
+     ctx.fillStyle="#161918";ctx.fillRect(panel.x-2,yy-3,15,6);
+   }
+ }
+
+ /* large industrial door */
+ const door=project(3.1,3.7,0);
+ if(door){
+   ctx.fillStyle="#090d0e";ctx.fillRect(door.x-50,door.y-125,100,125);
+   ctx.strokeStyle="#81705b";ctx.lineWidth=5;ctx.strokeRect(door.x-50,door.y-125,100,125);
+   for(let y=door.y-110;y<door.y;y+=23){
+     ctx.fillStyle="rgba(164,146,116,.12)";ctx.fillRect(door.x-40,y,80,2);
+   }
+   const pulse=.42+.38*Math.sin(t*2);
+   ctx.shadowBlur=16;ctx.shadowColor=`rgba(216,61,48,${pulse})`;
+   circle(door.x,door.y-108,5,`rgba(216,61,48,${pulse})`);
+   ctx.shadowBlur=0;
+   ctx.fillStyle="#b39a72";ctx.fillRect(door.x-6,door.y-52,12,4);
+ }
+
+ /* dust motes */
+ for(let i=0;i<12;i++){
+   const wx=-3.7+((i*1.43)%7.4), wz=-2.7+((i*1.87)%7.8);
+   const p=project(wx,wz,1.0+Math.sin(t*.7+i)*.28);
+   if(p)circle(p.x,p.y,1,"rgba(233,210,172,.16)");
+ }
+
+ /* soft vignette */
+ const v=ctx.createRadialGradient(W/2,H*.53,Math.min(W,H)*.18,W/2,H*.53,Math.max(W,H)*.72);
+ v.addColorStop(0,"rgba(0,0,0,0)");
+ v.addColorStop(.68,"rgba(0,0,0,.05)");
+ v.addColorStop(1,"rgba(0,0,0,.52)");
+ ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+
+ text("WAREHOUSE 01",W/2,H*.15,10,.36);
+}
 function draw(){
- if(!W)return;
- if(S.stage===1)drawBarrel();
- else if(S.stage===2)drawDrum();
- else if(S.stage===3)drawWarehouse();
- else drawBeach();
+if(!W)return;
+if(S.stage===1)drawBarrel();else if(S.stage===2)drawDrum();else if(S.stage===3)draw3DWarehouse();else drawBeach();
+ambient();
+requestAnimationFrame(draw);
 }
-function floor(c){rect(0,H*.69,W,H*.31,c);ctx.strokeStyle="#ffffff12";for(let i=0;i<11;i++){ctx.beginPath();ctx.moveTo(i*W/10,H*.69);ctx.lineTo(W/2+(i-5)*W*.32,H);ctx.stroke()}}
 function drawBarrel(){
- bg("#070707","#2b2118");const x=W/2+Math.sin(view)*W*.08;
- ctx.strokeStyle="#596058";ctx.lineWidth=7;
- for(let i=0;i<8;i++){ctx.beginPath();ctx.ellipse(x,H*.52,Math.min(W*.46,310)+i*4,H*.60-i*7,0,0,Math.PI*2);ctx.stroke()}
- ctx.fillStyle="#202420";ctx.beginPath();ctx.ellipse(x,H*.52,Math.min(W*.40,280),H*.50,0,0,Math.PI*2);ctx.fill();
- circle(x-W*.12,H*.59,25,"#925f49");circle(x+W*.12,H*.59,25,"#925f49");
- ctx.strokeStyle="#aa8962";ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(x-W*.14,H*.57);ctx.quadraticCurveTo(x,H*.43,x+W*.14,H*.57);ctx.stroke();
- text("錆びたドラム缶の内部",x,H*.18,20);text("ロープの結び目をタップ",x,H*.23,14);
+ bg("#040607","#2a211a");
+ const x=W/2+Math.sin(view)*W*.045;
+
+ /* warm light leaking through the barrel top */
+ const light=ctx.createRadialGradient(x,H*.27,5,x,H*.35,Math.min(W,H)*.58);
+ light.addColorStop(0,"rgba(220,164,94,.18)");light.addColorStop(1,"rgba(0,0,0,0)");
+ ctx.fillStyle=light;ctx.fillRect(0,0,W,H);
+
+ ctx.strokeStyle="#59615d";ctx.lineWidth=6;
+ for(let i=0;i<9;i++){
+   ctx.beginPath();ctx.ellipse(x,H*.52,Math.min(W*.47,310)+i*4,H*.61-i*6,0,0,Math.PI*2);ctx.stroke();
+ }
+ ctx.fillStyle="#121716";ctx.beginPath();ctx.ellipse(x,H*.52,Math.min(W*.405,278),H*.505,0,0,Math.PI*2);ctx.fill();
+
+ /* metal rings */
+ for(let i=0;i<4;i++){
+   ctx.strokeStyle="rgba(173,142,99,.20)";ctx.lineWidth=3;
+   ctx.beginPath();ctx.ellipse(x,H*(.30+i*.12),Math.min(W*.39,260),H*.035,0,0,Math.PI*2);ctx.stroke();
+ }
+ /* rope knots in foreground */
+ ctx.strokeStyle="#b58e69";ctx.lineWidth=9;ctx.beginPath();
+ ctx.moveTo(x-W*.14,H*.56);ctx.quadraticCurveTo(x,H*.40,x+W*.14,H*.56);ctx.stroke();
+ circle(x-W*.12,H*.58,24,"#845846");circle(x+W*.12,H*.58,24,"#845846");
+
+ /* tiny dust motes */
+ for(let i=0;i<18;i++){
+   const px=(i*97+performance.now()*.006)%W;
+   const py=(H*.20+(i*53)%Math.floor(H*.5));
+   circle(px,py,1,"rgba(220,190,145,.20)");
+ }
+ text("DRUM BARREL",x,H*.15,12,.55);
+ text("三重結び",x,H*.22,25);
+ text(S.rope?"結び目は解除済み":"結び目を調べる",x,H*.28,14,.75);
+ const cx=W/2,cy=H*.53,r=Math.min(W,H)*.34;
+ for(let i=0;i<5;i++){
+   ctx.strokeStyle=`rgba(175,135,78,${.24-i*.025})`;ctx.lineWidth=3;
+   ctx.beginPath();ctx.ellipse(cx,cy-r*.55+i*r*.28,r*(.68+i*.02),r*.08,0,0,Math.PI*2);ctx.stroke();
+ }
 }
+
 function drawDrum(){
- bg("#101516","#40382e");floor("#463e34");const x=W/2;
- rect(x-W*.36,H*.19,W*.72,H*.60,"#414a48");ctx.strokeStyle="#7a827d";ctx.lineWidth=5;ctx.strokeRect(x-W*.36,H*.19,W*.72,H*.60);
- ctx.fillStyle="#202524";ctx.beginPath();ctx.ellipse(x,H*.19,W*.36,33,0,0,Math.PI*2);ctx.fill();
- rect(x+W*.23,H*.40,15,130,"#98673d");rect(x-W*.23,H*.42,13,80,"#bcb9a7");
- text("レバー　　　　安全ピン",x,H*.37,14);text("2つのロックを解除して蓋を開ける",x,H*.88,15);
+bg("#101517","#43382d");floor("#40382f");let x=W/2;
+rect(x-W*.37,H*.16,W*.74,H*.59,"#3e4745");ctx.strokeStyle="#7b837f";ctx.lineWidth=4;ctx.strokeRect(x-W*.37,H*.16,W*.74,H*.59);
+ctx.fillStyle="#202423";ctx.beginPath();ctx.ellipse(x,H*.17,W*.37,34,0,0,Math.PI*2);ctx.fill();
+rect(x+W*.23,H*.37,18,136,S.lever?"#d2aa70":"#8a5d38");rect(x-W*.23,H*.39,14,82,S.pin?"#9d9a89":"#c7c4b2");
+circle(x+W*.235,H*.37,10,S.lever?"#78a76a":"#6b4530");circle(x-W*.225,H*.39,9,S.pin?"#78a76a":"#765f46");
+text("レバー",x+W*.27,H*.33,12);text("安全ピン",x-W*.23,H*.34,12);
+text("倉庫の脱出口",x,H*.84,20);text(S.lever&&S.pin?"ロック解除。タップで脱出":"2つのロックを解除する",x,H*.90,13,.72);
 }
 function drawWarehouse(){
- bg("#111a1d","#4b4339");floor("#4b4338");rect(W*.06,H*.14,W*.88,H*.56,"#303534");
- for(let i=0;i<5;i++){rect(W*.10,H*(.19+i*.095),W*.30,9,"#654b32");rect(W*.15,H*(.15+i*.095),55,38,"#815b37")}
- rect(W*.44,H*.52,120,62,"#963a2e");text("工具箱",W*.50,H*.59,14);
- ["#2e607a","#a33d35","#aa903e","#2e607a"].forEach((c,i)=>circle(W*.70+i*38,H*.39,17,c));
- rect(W*.78,H*.22,W*.14,H*.46,"#664a31");rect(W*.81,H*.27,W*.08,H*.33,"#111615");
- text("制御盤",W*.70,H*.34,13);text("大扉",W*.86,H*.24,18);
- text("棚 → 工具箱 → 青ドラム → 制御盤 → 大扉",W/2,H*.88,13);
+bg("#0c1417","#51483d");floor("#433c34");
+const sway=Math.sin(performance.now()/2600)*4;
+rect(W*.04,H*.11,W*.92,H*.58,"#292f2f");
+rect(W*.07,H*.15,W*.86,H*.035,"#161a19");
+for(let i=0;i<6;i++){
+const y=H*(.22+i*.075);
+rect(W*.09,y,W*.34,7,"#755638");
+for(let j=0;j<4;j++){
+const bx=W*(.11+j*.075);
+const by=y+9;
+rect(bx,by,W*.052,30,["#6f5032","#365b62","#854239","#78683b"][j]);
+}
+}
+rect(W*.445+sway,H*.49,130,67,"#743027");
+rect(W*.455+sway,H*.505,110,39,"#3a1715");
+text("TOOL CASE",W*.51+sway,H*.555,11,.7);
+for(let i=0;i<4;i++){circle(W*.67+i*39,H*.36,18,["#31627a","#a23b34","#a9903e","#35657a"][i]);circle(W*.67+i*39,H*.36,7,"#111b1d")}
+rect(W*.78,H*.18,W*.16,H*.50,"#5e4730");
+rect(W*.805,H*.235,W*.11,H*.36,"#0d1212");
+line(W*.86,H*.25,W*.86,H*.59,"#b09a79",2);
+circle(W*.86,H*.42,5,"#c7a56f");
+text("CONTROL",W*.69,H*.30,11,.7);text("DOOR",W*.86,H*.17,16,.8);
+text("棚 → 工具箱 → 青ドラム → 制御盤 → 大扉",W/2,H*.87,13,.72);
 }
 function drawBeach(){
- bg("#68bee0","#d8bf86");rect(0,H*.61,W,H*.39,"#d0b77e");rect(0,H*.72,W,H*.28,"#2a8fa9");
- const x=W/2+Math.sin(view)*40;ctx.fillStyle="#68462e";ctx.beginPath();ctx.moveTo(x-W*.18,H*.64);ctx.lineTo(x+W*.18,H*.64);ctx.lineTo(x+W*.12,H*.76);ctx.lineTo(x-W*.12,H*.76);ctx.closePath();ctx.fill();rect(x-3,H*.46,6,H*.20,"#563824");
- text("係留されたボート",x,H*.39,19);text("ボートをタップ",W/2,H*.88,15);
+seaTime+=.008;
+const sky=ctx.createLinearGradient(0,0,0,H);
+sky.addColorStop(0,"#172d3a");sky.addColorStop(.55,"#345b66");sky.addColorStop(1,"#c18d62");
+ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+
+ctx.fillStyle="#d3b083";ctx.fillRect(0,H*.61,W,H*.39);
+
+for(let i=0;i<8;i++){
+ const yy=H*(.61+i*.028);
+ const off=Math.sin(seaTime*2+i)*12;
+ ctx.strokeStyle=`rgba(230,240,220,${.18-i*.012})`;
+ ctx.lineWidth=1;
+ ctx.beginPath();
+ ctx.moveTo(-20+off,yy);ctx.quadraticCurveTo(W*.35+off,yy-5,W*.72+off,yy);
+ ctx.quadraticCurveTo(W*.86+off,yy+4,W+20+off,yy-1);ctx.stroke();
+}
+
+const sunX=W*.78,sunY=H*.20;
+const glow=ctx.createRadialGradient(sunX,sunY,8,sunX,sunY,90);
+glow.addColorStop(0,"rgba(255,240,190,.85)");glow.addColorStop(1,"rgba(255,220,150,0)");
+ctx.fillStyle=glow;ctx.fillRect(sunX-100,sunY-100,200,200);
+circle(sunX,sunY,22,"#ffe5ad");
+
+ctx.fillStyle="#26363a";
+ctx.beginPath();ctx.moveTo(0,H*.54);ctx.lineTo(W*.13,H*.45);ctx.lineTo(W*.34,H*.53);ctx.lineTo(W*.53,H*.44);ctx.lineTo(W*.76,H*.52);ctx.lineTo(W,H*.46);ctx.lineTo(W,H*.61);ctx.lineTo(0,H*.61);ctx.closePath();ctx.fill();
+
+const bx=W*.62,by=H*.63+Math.sin(seaTime)*3;
+ctx.save();ctx.translate(bx,by);
+ctx.fillStyle="#3a2118";ctx.beginPath();ctx.moveTo(-90,0);ctx.lineTo(82,0);ctx.lineTo(57,28);ctx.lineTo(-62,28);ctx.closePath();ctx.fill();
+ctx.fillStyle="#7b4d2d";ctx.fillRect(-52,-12,104,12);
+ctx.fillStyle="#211812";ctx.fillRect(-10,-72,20,60);
+ctx.strokeStyle="#b99562";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-70);ctx.lineTo(0,-12);ctx.stroke();
+ctx.fillStyle="#d9c08d";ctx.beginPath();ctx.moveTo(3,-67);ctx.lineTo(52,-42);ctx.lineTo(3,-20);ctx.closePath();ctx.fill();
+ctx.restore();
+
+ctx.strokeStyle="#6a5035";ctx.lineWidth=4;
+ctx.beginPath();ctx.moveTo(W*.42,H*.63);ctx.lineTo(W*.62,H*.63);ctx.stroke();
+circle(W*.42,H*.63,6,"#8c6943");
+
+text("係留ロックを外してボートへ",W/2,H*.88,15,.85);
 }
 
 function sequence(title,desc,names,answer,done){
- let p=0;
- popup("<h2>"+title+"</h2><p>"+desc+"</p><div class='grid'>"+
- names.map((n,i)=>"<button id='sq"+i+"'>"+n+"</button>").join("")+
- "</div><p id='progress'>0 / "+answer.length+"</p>");
- names.forEach((n,i)=>$("sq"+i).onclick=()=>{
-   if(i!==answer[p]){p=0;$("progress").textContent="失敗。最初から";return}
-   p++;$("progress").textContent=p+" / "+answer.length;
-   if(p===answer.length){done();close();update();draw()}
- });
+let p=0;
+popup(`<h2>${title}</h2><p>${desc}</p><div class="grid">${names.map((n,i)=>`<button id="sq${i}">${n}</button>`).join("")}</div><div class="progress"><i id="bar"></i></div><p id="progress">0 / ${answer.length}</p>`);
+names.forEach((n,i)=>$("sq"+i).onclick=()=>{
+if(i!==answer[p]){p=0;$("progress").textContent="失敗 — 最初から";$("bar").style.width="0%";errorSound();toast("手順を間違えた");return}
+p++;$("progress").textContent=p+" / "+answer.length;$("bar").style.width=(p/answer.length*100)+"%";
+if(p===answer.length){successSound();done();close();update();draw();toast("謎を解いた")}
+});
 }
-
 function interact(){
- if(S.stage===1){
-  sequence("三重結び・ロープ解除","6手の順番を正しく入力してください。間違えると結び目が戻ります。",
-  ["A","B","C","D"],[2,3,0,1,3,2],()=>{S.rope=1;S.stage=2;save()});
- }else if(S.stage===2){
-  if(!S.lever)sequence("油圧レバー","ランプの順番：赤 → 黄 → 緑。",["赤","黄","緑"],[1,0,2],()=>{S.lever=1;save();setTimeout(interact,80)});
-  else if(!S.pin)sequence("安全ピン","短く2回、最後に長く引く。",["短","長"],[0,0,1],()=>{S.pin=1;S.stage=3;save()});
- }else if(S.stage===3){
-  if(!S.key)sequence("棚の荷札","荷札の大きさを記憶して入力。",["小","中","大"],[2,0,1,2,1],()=>{S.key=1;save()});
-  else if(!S.tool)sequence("工具箱の記号錠","残された記号：△ → ○ → □ → ○",["△","○","□"],[0,1,2,1],()=>{S.tool=1;save()});
-  else if(!S.gear){
-   popup("<h2>青いドラム缶</h2><p>側面の傷跡に「285」と刻まれている。</p><input id='code' class='code' inputmode='numeric' maxlength='3'><button onclick='checkCode()'>開ける</button>");
-  }else if(!S.panel)sequence("制御盤","点滅順：青 → 赤 → 黄 → 青。",["青","赤","黄"],[0,1,2,0],()=>{S.panel=1;save()});
-  else sequence("大扉・最終ロック","集めた情報を統合して入力。",["1","4","7"],[0,1,2],()=>{S.stage=4;save()});
- }else{
-  sequence("ボートの係留ロック","印の順番：波 → 鳥 → 月。",["波","鳥","月"],[0,1,2],()=>{popup("<h1>脱出成功</h1><p>係留ロープを外し、ボートで島を脱出した。</p><p>— CLEAR —</p><button onclick='localStorage.removeItem(KEY);location.reload()'>最初から</button>")});
- }
+if(S.stage===1){
+sequence("三重結び・ロープ解除","結び目の荷重を逃がす順番を見抜け。6手。",["A","B","C","D"],[2,3,0,1,3,2],()=>{S.rope=1;S.stage=2;selectedItem="rope";stageAudio=0;addNote("脱出開始","ロープを解いた。ドラム缶の外には別のロックがある。");save();setAtmosphere();update()});
+}else if(S.stage===2){
+if(!S.lever)sequence("油圧レバー","ランプの記録：黄 → 赤 → 緑。",["赤","黄","緑"],[1,0,2],()=>{S.lever=1;selectedItem="lever";addNote("ロック","レバーを操作した。もう一つの安全機構を探す。");save();update()});
+else if(!S.pin)sequence("安全ピン","短く2回、最後に長く引く。",["短","長"],[0,0,1],()=>{S.pin=1;S.stage=3;player.x=0;player.z=-3.8;player.yaw=0;selectedItem="pin";stageAudio=0;addNote("倉庫","安全ピンを外すと倉庫へ出られた。");save();setAtmosphere();update()});
+else {S.stage=3;save();update();draw()}
+}else if(S.stage===3){
+inspectWarehouseObject();
+}else{
+if(!S.boat)sequence("ボート・係留ロック","船体に刻まれた印：波 → 鳥 → 月。",["波","鳥","月"],[0,1,2],()=>{S.boat=1;save()});
+else clearGame();
 }
-window.checkCode=()=>{if($("code").value==="285"){S.gear=1;save();close();update();draw()}else alert("番号が違います。")};
+}
+window.checkCode=()=>{if($("code").value==="285"){S.gear=1;selectedItem="gear";addNote("予備電源","青いドラム缶の暗証番号は285。中に予備電源が入っている。");save();close();update();draw();toast("予備電源を入手")}else toast("番号が違う")};
 
-cv.addEventListener("pointerdown",e=>{drag=true;lastX=e.clientX});
-cv.addEventListener("pointermove",e=>{if(drag){view+=(e.clientX-lastX)*.006;lastX=e.clientX;draw()}});
-cv.addEventListener("pointerup",e=>{if(!drag)return;const moved=Math.abs(e.clientX-lastX);drag=false;if(moved<12)interact()});
+function stageMessage(title,body,next){
+ popup(`<h2>${title}</h2><p>${body}</p><button onclick='close();${next||""}'>進む</button>`);
+}
+function clearGame(){
+successSound();
+popup("<h1>脱出成功</h1><p>最後の係留ロープを外した。エンジンが始動する。</p><p>朝の光の中、倉庫のあった島が少しずつ遠ざかっていく。</p><h2>— ISLAND ESCAPE —</h2><p>CHAPTER 1 · DRUM BARREL INCIDENT</p><button onclick='localStorage.removeItem(KEY);location.reload()'>最初から</button>");
+}
 
-resize();
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{});}
+cv.addEventListener("pointerdown",e=>{startAudio();dragging=true;moved=false;downX=e.clientX;downY=e.clientY});
+cv.addEventListener("pointermove",e=>{if(!dragging)return;let dx=e.clientX-downX;if(Math.abs(dx)>5)moved=true;view+=dx*.004;player.yaw+=dx*.006;downX=e.clientX});
+cv.addEventListener("pointerup",e=>{if(!dragging)return;dragging=false;if(!moved)interact()});
+cv.addEventListener("pointercancel",()=>dragging=false);
+document.querySelectorAll("#movePad button").forEach(b=>{
+const k=b.dataset.m;
+const on=()=>move[k]=true,off=()=>move[k]=false;
+b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);b.addEventListener("pointercancel",off);b.addEventListener("pointerleave",off);
+});
+player.yaw=0;
+
+
+resize();update();
+initParticles();setAtmosphere();
+setTimeout(()=>{
+$("boot").classList.add("hide");
 if(hasSave())$("resume").classList.remove("hide");
-update();
+$("title").style.display="flex";
+},850);
 </script>
 </body>
 </html>
