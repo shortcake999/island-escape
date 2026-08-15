@@ -300,16 +300,17 @@ function combineSelectedWithFocus(){
 }
 
 /* ===== v15 PROCEDURAL CINEMATIC BGM ===== */
-let audioCtx=null,masterGain=null,bgmGain=null,noiseGain=null,audioOn=false,audioTimer=null;
+let masterGain=null,bgmGain=null,noiseGain=null,audioOn=false,audioTimer=null;
 let stageAudio=0, audioNodes=[];
 function initAudio(){
- if(audioCtx)return;
  const AC=window.AudioContext||window.webkitAudioContext;
  if(!AC){toast("この端末ではBGMを利用できません");return}
- audioCtx=new AC();
- masterGain=audioCtx.createGain();masterGain.gain.value=.55;masterGain.connect(audioCtx.destination);
- bgmGain=audioCtx.createGain();bgmGain.gain.value=.16;bgmGain.connect(masterGain);
- noiseGain=audioCtx.createGain();noiseGain.gain.value=.025;noiseGain.connect(masterGain);
+ if(!audioCtx) audioCtx=new AC();
+ if(!masterGain){
+   masterGain=audioCtx.createGain();masterGain.gain.value=.55;masterGain.connect(audioCtx.destination);
+   bgmGain=audioCtx.createGain();bgmGain.gain.value=.16;bgmGain.connect(masterGain);
+   noiseGain=audioCtx.createGain();noiseGain.gain.value=.025;noiseGain.connect(masterGain);
+ }
  startStageMusic();
 }
 function osc(freq,dur,type="sine",gain=.04,when=0){
@@ -848,13 +849,19 @@ b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);b.addEv
 player.yaw=0;
 
 
-resize();update();
-initParticles();setAtmosphere();
 setTimeout(()=>{
-$("boot").classList.add("hide");
-if(hasSave())$("resume").classList.remove("hide");
-$("title").style.display="flex";
+ $("boot").classList.add("hide");
+ if(hasSave())$("resume").classList.remove("hide");
+ $("title").style.display="flex";
 },850);
+try{
+ resize();update();
+ initParticles();setAtmosphere();
+}catch(e){
+ console.error("ISLAND ESCAPE initialization:",e);
+ $("boot").classList.add("hide");
+ $("title").style.display="flex";
+}
 </script>
 </body>
 </html>
